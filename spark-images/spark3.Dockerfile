@@ -1,6 +1,5 @@
 ARG spark_uid=185
 FROM openjdk:8-jdk-slim AS builder
-LABEL maintainer="bbenzikry@gmail.com"
 
 # Build options
 ARG spark_version=3.0.1
@@ -54,11 +53,9 @@ RUN chmod 0644 aws-java-sdk-bundle*.jar
 
 FROM openjdk:8-jdk-slim as final
 LABEL org.opencontainers.image.created=$BUILD_DATE \
-  org.opencontainers.image.authors='bbenzikry@gmail.com' \
-  org.opencontainers.image.url='https://github.com/bbenzikry/spark-eks.git' \
   org.opencontainers.image.version=$spark_version \
-  org.opencontainers.image.title="Spark ${spark_version} for EKS" \
-  org.opencontainers.image.description="Spark ${spark_version} built for working with AWS services"
+  org.opencontainers.image.title="Spark ${spark_version} for OpenShift" \
+  org.opencontainers.image.description="Spark ${spark_version} built for working with OpenShift"
 
 # Copy spark + glue + hadoop from builder stage
 COPY --from=builder /spark /opt/spark

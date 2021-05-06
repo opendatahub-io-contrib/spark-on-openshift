@@ -1,10 +1,10 @@
 = Spark on OpenShift
 
-This repo provides tools and instructions for deploying and using Google Spark Operator on OpenShift.
+This repo provides tools and instructions for deploying and using Google Spark Operator on OpenShift, with custom images including S3 connectors, JMX exporter for monitoring,...
 
 == Custom Spark images
 
-We will create custom Spark images that include S3 connector components, JMX exporter for monitoring... (link:https://github.com/bbenzikry/spark-eks[Credits])
+We will first create the custom Spark images (link:https://github.com/bbenzikry/spark-eks[Credits]).
 
 From the spark-images folder:
 
