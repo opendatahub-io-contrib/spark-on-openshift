@@ -1,0 +1,9 @@
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: spark-demo
+spec:
+  generateBucketName: spark-demo
+  storageClassName: ocs-storagecluster-ceph-rgw
+status:
+  phase: Bound

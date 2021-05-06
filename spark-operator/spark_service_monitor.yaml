@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sparkservicemonitor
+spec:
+  endpoints:
+    - path: /metrics
+      interval: 5s
+      port: metrics
+  selector:
+    matchLabels:
+      spark/servicemonitor: "true"

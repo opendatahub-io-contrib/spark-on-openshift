@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-application-metrics
+  labels:
+    spark/servicemonitor: "true"
+spec:
+  ports:
+    - port: 8090
+      interval: 5s
+      path: /metrics
+      name: metrics
+  clusterIP: None
+  selector:
+    sparkoperator.k8s.io/launched-by-spark-operator: "true"
