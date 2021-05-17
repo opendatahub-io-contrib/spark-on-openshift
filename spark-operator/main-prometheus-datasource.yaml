@@ -7,7 +7,7 @@ spec:
     - basicAuthUser: internal
       access: proxy
       editable: true
-      isDefault: true
+      isDefault: false
       secureJsonData:
         httpHeaderValue1: 'Bearer BEARER_TOKEN'
       name: prometheus
@@ -17,4 +17,4 @@ spec:
         timeInterval: 5s
         tlsSkipVerify: true
       type: prometheus
-  name: grafana-prometheus-datasource.yaml
+  name: main-prometheus-datasource.yaml

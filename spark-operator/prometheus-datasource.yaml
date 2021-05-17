@@ -14,4 +14,4 @@ spec:
       type: prometheus
       url: 'http://prometheus-operated:9090'
       version: 1
-  name: prometheus.yaml
+  name: prometheus-datasource.yaml
