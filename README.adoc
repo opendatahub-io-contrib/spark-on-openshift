@@ -75,7 +75,7 @@ helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-
 .Deploy the helm chart
 [source,bash]
 ----
-helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace  --set image.tag=v1beta2-1.2.3-3.1.1 --set webhook.enable=true --set webhook.namespaceSelector="spark-enabled=true" --set resourceQuotaEnforcement.enable=true 
+helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace  --set image.tag=v1beta2-1.2.3-3.1.1 --set webhook.enable=true --set resourceQuotaEnforcement.enable=true 
 ----
 
 === Monitoring
