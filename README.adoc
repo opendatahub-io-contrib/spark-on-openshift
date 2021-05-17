@@ -75,33 +75,34 @@ helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-
 .Deploy the helm chart
 [source,bash]
 ----
-helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace --set webhook.enable=true --set image.tag=v1beta2-1.2.3-3.1.1
+helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace  --set image.tag=v1beta2-1.2.3-3.1.1 --set webhook.enable=true --set webhook.namespaceSelector="spark-enabled=true" --set resourceQuotaEnforcement.enable=true 
 ----
 
 === Monitoring
 
 We will monitor the Spark operator itself, as well as the applications it creates.
 
-NOTE: Prerequisites: Prometheus and Grafana must be installed in your environment. The easiest way is to use the operators.
+NOTE: Prerequisites: Prometheus and Grafana must be installed in your environment. The easiest way is to use the operators. An instance of Grafana must be created so that the ServiceAccount is provisioned.
 
 From spark-operator folder:
 
 .Create the two Services that will expose the metrics
 [source,bash]
 ----
-oc apply -f *_svc.yaml
+oc apply -f spark-application-metrics_svc.yaml
+oc apply -f spark-operator-metrics_svc.yaml
 ----
 
 .For Prometheus configuration, create the Spark Service Monitor
 [source,bash]
 ----
-oc apply -f spark_service_monitor.yaml
+oc apply -f spark-service-monitor.yaml
 ----
 
 .For Grafana configuration, create the Prometheus Datasource
 [source,bash]
 ----
-oc apply -f prometheus_datasource.yaml
+oc apply -f prometheus-datasource.yaml
 ----
 
 NOTE: We will need another datasource to retrieve base CPU and RAM metrics. To do that we'll connect to the "main" OpenShift Prometheus through the following procedure.
@@ -115,7 +116,7 @@ oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-servic
 .Retrieve the bearer token used to authenticate to Prometheus. You can display it with this command:
 [source,bash]
 ----
-oc serviceaccounts get-token grafana-serviceaccount
+export BEARER_TOKEN=$(oc serviceaccounts get-token grafana-serviceaccount)
 ----
 
 Replace BEARER_TOKEN in the `main-prometheus-datasource.yaml` file with the value, and apply it.
@@ -124,6 +125,7 @@ Replace BEARER_TOKEN in the `main-prometheus-datasource.yaml` file with the valu
 [source,bash]
 ----
 oc apply -f main-prometheus-datasource.yaml
+cat main-prometheus-datasource.yaml | sed -e "s/BEARER_TOKEN/$BEARER_TOKEN/g" | oc apply -f -
 ----
 
 .Create the Grafana dashboards

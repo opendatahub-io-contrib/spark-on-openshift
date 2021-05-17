@@ -10,7 +10,7 @@ spec:
     "spark.metrics.conf.*.source.jvm.class": "org.apache.spark.metrics.source.JvmSource"
     "spark.metrics.appStatusSource.enabled": "true"
   mainApplicationFile: 'local:///home/wordcount.py'
-  image: "quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.2"
+  image: "quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.3"
   volumes:
     - name: wordcount
       configMap:
