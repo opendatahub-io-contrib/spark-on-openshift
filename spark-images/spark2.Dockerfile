@@ -4,7 +4,7 @@ FROM openjdk:8-jdk-slim AS builder
 ARG spark_version=2.4.6
 ARG hadoop_version=3.3.0
 ARG kubernetes_client_version=4.6.4
-ARG jmx_prometheus_javaagent_version=0.12.0
+ARG jmx_prometheus_javaagent_version=0.15.0
 ARG aws_java_sdk_version=1.11.797
 ARG spark_uid=185
 
@@ -82,6 +82,7 @@ ENV LD_LIBRARY_PATH /lib64
 
 # Set spark workdir
 WORKDIR /opt/spark/work-dir
+RUN chmod g+w /opt/spark/work-dir
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 
