@@ -15,7 +15,7 @@ RUN tar -xvzf spark-${spark_version}-bin-without-hadoop.tgz
 RUN mv spark-${spark_version}-bin-without-hadoop spark
 
 # Download Hadoop
-ADD http://mirrors.whoishostingthis.com/apache/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
+ADD https://downloads.apache.org/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
 # Unzip Hadoop
 RUN tar -xvzf hadoop-${hadoop_version}.tar.gz
 RUN mv hadoop-${hadoop_version} hadoop
@@ -83,6 +83,10 @@ ENV LD_LIBRARY_PATH /lib64
 # Set spark workdir
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
+
+RUN mkdir -p /etc/metrics/conf
+COPY conf/metrics.properties /etc/metrics/conf
+COPY conf/prometheus.yaml /etc/metrics/conf
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 
