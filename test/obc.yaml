@@ -4,6 +4,4 @@ metadata:
   name: spark-demo
 spec:
   generateBucketName: spark-demo
-  storageClassName: ocs-storagecluster-ceph-rgw
-status:
-  phase: Bound
+  storageClassName: openshift-storage.noobaa.io

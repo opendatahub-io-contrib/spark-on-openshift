@@ -1,0 +1,178 @@
+### Adpated from Helm Chart: https://artifacthub.io/packages/helm/spot/spark-history-server
+# Source: spark-history-server/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    app.kubernetes.io/instance: spark-history-server
+---
+# Source: spark-history-server/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spark-history-server-cr
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    app.kubernetes.io/instance: spark-history-server
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups: [""]
+  resources: ["deployments", "pods"]
+  verbs: ["*"]
+---
+# Source: spark-history-server/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spark-history-server-crb
+subjects:
+- kind: ServiceAccount
+  name: spark-history-server
+  namespace: spark-operator
+roleRef:
+  kind: ClusterRole
+  name: spark-history-server-cr
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: spark-history-server/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 18080
+    targetPort: historyport
+    protocol: TCP
+    name: http-historyport
+  selector:
+    app.kubernetes.io/name: spark-history-server
+    app.kubernetes.io/instance: spark-history-server
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/instance: spark-history-server
+    app.kubernetes.io/name: spark-history-server
+spec:
+  to:
+    kind: Service
+    name: spark-history-server
+    weight: 100
+  port:
+    targetPort: http-historyport
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
+---
+# Source: spark-history-server/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spark-history-server
+      app.kubernetes.io/instance: spark-history-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: spark-history-server
+        app.kubernetes.io/instance: spark-history-server
+    spec:
+      serviceAccountName: spark-history-server
+      containers:
+      - name: spark-history-server
+        image: "quay.io/guimou/spark-odh:s3.0.1-h3.3.0_v0.0.2"
+        imagePullPolicy: IfNotPresent
+        serviceAccount: 'spark-operator-spark'
+        env:
+        - name: HADOOP_CONF_DIR
+          value: /etc/hadoop
+        - name: SPARK_NO_DAEMONIZE
+          value: "true"
+        ports:
+        - name: historyport
+          containerPort: 18080
+          protocol: TCP
+        resources:
+          {}
+        command:
+        - "/bin/sh"
+        - "-c"
+        - >
+          set -ex;
+          myuid=$(id -u);
+          mygid=$(id -g);
+          set +e;
+          uidentry=$(getent passwd $myuid);
+          set -e;
+          if [ -z "$uidentry" ] ; then
+              if [ -w /etc/passwd ] ; then
+            echo "$myuid:x:$myuid:$mygid:${SPARK_USER_NAME:-anonymous uid}:$SPARK_HOME:/bin/false" >> /etc/passwd;
+              else
+            echo "Container ENTRYPOINT failed to add passwd entry for anonymous UID";
+              fi;
+          fi;
+          SPARK_CLASSPATH="$SPARK_CLASSPATH:${SPARK_HOME}/jars/*";
+          env | grep SPARK_JAVA_OPT_ | sort -t_ -k4 -n | sed 's/[^=]*=\(.*\)/\1/g' > /tmp/java_opts.txt;
+          readarray -t SPARK_EXECUTOR_JAVA_OPTS < /tmp/java_opts.txt;
+          if [ -n "$SPARK_EXTRA_CLASSPATH" ]; then
+            SPARK_CLASSPATH="$SPARK_CLASSPATH:$SPARK_EXTRA_CLASSPATH";
+          fi;
+          if ! [ -z ${PYSPARK_PYTHON+x} ]; then
+              export PYSPARK_PYTHON;
+          fi;
+          if ! [ -z ${PYSPARK_DRIVER_PYTHON+x} ]; then
+              export PYSPARK_DRIVER_PYTHON;
+          fi;
+          if [ -n "${HADOOP_HOME}"  ] && [ -z "${SPARK_DIST_CLASSPATH}"  ]; then
+            export SPARK_DIST_CLASSPATH="$($HADOOP_HOME/bin/hadoop classpath)";
+          fi;
+          if ! [ -z ${HADOOP_CONF_DIR+x} ]; then
+            SPARK_CLASSPATH="$HADOOP_CONF_DIR:$SPARK_CLASSPATH";
+          fi;
+          if ! [ -z ${SPARK_CONF_DIR+x} ]; then
+            SPARK_CLASSPATH="$SPARK_CONF_DIR:$SPARK_CLASSPATH";
+          elif ! [ -z ${SPARK_HOME+x} ]; then
+            SPARK_CLASSPATH="$SPARK_HOME/conf:$SPARK_CLASSPATH";
+          fi;
+          export SPARK_LOG_DIR=/opt/spark/work-dir/logs;
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.history.fs.logDirectory=s3a://$BUCKET_NAME/logs-dir/";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.endpoint=$BUCKET_HOST";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.access.key=$AWS_ACCESS_KEY_ID";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.secret.key=$AWS_SECRET_ACCESS_KEY";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.path.style.access=true";
+          export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.hadoop.fs.s3a.connection.ssl.enabled=false";
+          echo $SPARK_HISTORY_OPTS;
+          /opt/spark/sbin/start-history-server.sh
+        envFrom:
+        - configMapRef:
+            name: obc-spark-history-server
+        - secretRef:
+            name: obc-spark-history-server
+        livenessProbe:
+          httpGet:
+            path: /
+            port: historyport
+        readinessProbe:
+          httpGet:
+            path: /
+            port: historyport

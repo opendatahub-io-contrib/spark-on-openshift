@@ -1,8 +1,0 @@
-helm install spark-history-server spot/spark-history-server --version 1.5.0 --dry-run \
-    --set image.repository=gcr.io/spark-operator/spark-operator \
-    --set image.tag=v1beta2-1.2.3-3.1.1 \
-    --set pvc.enablePVC=false \
-    --set s3.enableS3=true \
-    --set s3.secret=spark-history-server \
-    --set s3.logDirectory=s3a://spark-history-server-e8a3f03a-4fb0-4a37-b5c1-9949e2ebc8a3/ \
-    --set s3.endpoint=s3.openshift-storage.svc:443

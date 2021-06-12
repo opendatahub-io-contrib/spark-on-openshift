@@ -10,7 +10,7 @@ spec:
       isDefault: false
       secureJsonData:
         httpHeaderValue1: 'Bearer BEARER_TOKEN'
-      name: prometheus
+      name: main-prometheus
       url: 'https://thanos-querier.openshift-monitoring.svc.cluster.local:9091'
       jsonData:
         httpHeaderName1: 'Authorization'

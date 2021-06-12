@@ -113,18 +113,17 @@ NOTE: We will need another datasource to retrieve base CPU and RAM metrics. To d
 oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount
 ----
 
-.Retrieve the bearer token used to authenticate to Prometheus. You can display it with this command:
+.Retrieve the bearer token used to authenticate to Prometheus:
 [source,bash]
 ----
 export BEARER_TOKEN=$(oc serviceaccounts get-token grafana-serviceaccount)
 ----
 
-Replace BEARER_TOKEN in the `main-prometheus-datasource.yaml` file with the value, and apply it.
+Deploy `main-prometheus-datasource.yaml` file with the BEARER_TOKEN value.
 
 .Create the "main" Prometheus Datasource
 [source,bash]
 ----
-oc apply -f main-prometheus-datasource.yaml
 cat main-prometheus-datasource.yaml | sed -e "s/BEARER_TOKEN/$BEARER_TOKEN/g" | oc apply -f -
 ----
 
@@ -134,6 +133,47 @@ cat main-prometheus-datasource.yaml | sed -e "s/BEARER_TOKEN/$BEARER_TOKEN/g" | 
 oc apply -f spark-operator-dashboard.yaml
 oc apply -f spark-application-dashboard.yaml
 ----
+
+== Spark History Server
+
+All the following commands are executed from the `spark-history-server` folder.
+
+=== Object storage
+
+We will use object storage to store the logs data from the Spark jobs. We will first need to create a bucket.
+
+.Create the OBC
+[source,bash]
+----
+oc apply -f spark-hs-obc.yaml
+----
+
+IMPORTANT: The Spark/Hadoop instances cannot log direclty into a bucket. A "folder" must exist where the logs will be sent. We will trick Spark/Hadoop into creating this folder by uploading a hidden file to the location we want this folder.
+
+Retrieve the Access and Secret Key from the Secret named `obc-spark-history-server`, the name of the bucket from the ConfigMap named `obc-spark-history-server` as well as the Route to the S3 storage (you may have to create it to access the RGW, default S3 Route in ODF points to MCG).
+
+.Upload any small file, to the bucket (here using the AWS CLI)
+[source,bash]
+----
+export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
+export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+aws --endpoint-url YOUR_ROUTE_TO_S3 s3 cp YOUR_FILE s3://YOUR_BUCKET_NAME/logs-dir/.s3keep
+----
+
+Renaming this file `.s3keep` will mark it as hidden from from the History Server and Spark logging mechanism perspective, but the "folder" will appear as being present, making everyone happy!
+
+=== History Server deployment
+
+We can now create the service account, Role, RoleBonding, Service, Route and Deployment for the History Server.
+
+.Fully deploy the History Server
+[source,bash]
+----
+oc apply -f spark-hs-deployment.yaml
+----
+
+The UI is not accessible through the Route that was created, named `spark-history-server`
+
 
 == Usage
 
@@ -172,6 +212,8 @@ Our application file is `wordcount.py` that you can find in the folder. To make 
 ----
 oc apply -f wordcount_configmap.yaml
 ----
+
+=== Basic Tests
 
 We are now ready to launch our Spark Job using the SparkApplication CRD from the operator. Our YAML definition will:
 
@@ -239,3 +281,13 @@ So the sorted list of all the words with their occurences in the full text.
 While a job is running you can also have a look at the Grafana dashboards for something like this:
 
 image::test/spark_operator_dashboard.png[Dashboard]
+
+=== History Server Test
+
+We'll now log the output from the job using our history server.
+
+.Launch the Spark Job
+[source,bash]
+----
+oc apply -f spark_app_shakespeare_history_server.yaml
+----

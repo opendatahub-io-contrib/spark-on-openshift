@@ -9,6 +9,13 @@ spec:
   sparkConf:
     "spark.metrics.conf.*.source.jvm.class": "org.apache.spark.metrics.source.JvmSource"
     "spark.metrics.appStatusSource.enabled": "true"
+    "spark.eventLog.enabled": "true"
+    "spark.eventLog.dir": "s3a://spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095/logs-dir/"
+    "spark.hadoop.fs.s3a.bucket.spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095.endpoint": "s3.openshift-storage.svc"
+    "spark.hadoop.fs.s3a.bucket.spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095.access.key": "cMPiQBiLvaUpJx7W461E"
+    "spark.hadoop.fs.s3a.bucket.spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095.secret.key": "bC7k9NxX7vZoMCUhFMgN7+D+Z97clr/VzC87xNjP"
+    "spark.hadoop.fs.s3a.bucket.spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095.path.style.access": "true"
+    "spark.hadoop.fs.s3a.bucket.spark-history-server-17bb3752-c068-49cb-8f73-44d3adcd7095.connection.ssl.enabled": "false"
   mainApplicationFile: 'local:///home/wordcount.py'
   image: "quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.3"
   volumes:

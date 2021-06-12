@@ -3,5 +3,5 @@ kind: ObjectBucketClaim
 metadata:
   name: obc-spark-history-server
 spec:
-  generateBucketName: spark-history-server
-  storageClassName: openshift-storage.noobaa.io
+  generateBucketName: obc-spark-history-server
+  storageClassName: ocs-storagecluster-ceph-rgw
