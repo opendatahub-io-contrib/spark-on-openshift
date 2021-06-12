@@ -1,0 +1,7 @@
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: obc-spark-history-server
+spec:
+  generateBucketName: spark-history-server
+  storageClassName: openshift-storage.noobaa.io

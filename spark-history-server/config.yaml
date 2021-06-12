@@ -1,0 +1,115 @@
+# Source: spark-history-server/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+---
+# Source: spark-history-server/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spark-history-server-cr
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups: [""]
+  resources: ["deployments", "pods"]
+  verbs: ["*"]
+---
+# Source: spark-history-server/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spark-history-server-crb
+subjects:
+- kind: ServiceAccount
+  name: spark-history-server
+  namespace: spark-operator
+roleRef:
+  kind: ClusterRole
+  name: spark-history-server-cr
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: spark-history-server/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 18080
+    targetPort: historyport
+    protocol: TCP
+    name: http-historyport
+  selector:
+    app.kubernetes.io/name: spark-history-server
+    app.kubernetes.io/instance: spark-history-server
+---
+# Source: spark-history-server/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-history-server
+  labels:
+    app.kubernetes.io/name: spark-history-server
+    helm.sh/chart: spark-history-server-1.5.0
+    app.kubernetes.io/instance: spark-history-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spark-history-server
+      app.kubernetes.io/instance: spark-history-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: spark-history-server
+        app.kubernetes.io/instance: spark-history-server
+    spec:
+      serviceAccountName: spark-history-server
+      containers:
+      - name: spark-history-server
+        image: "quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.3"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: HADOOP_CONF_DIR
+          value: /etc/hadoop
+        - name: SPARK_NO_DAEMONIZE
+          value: "true"
+        ports:
+        - name: historyport
+          containerPort: 18080
+          protocol: TCP
+        resources:
+          {}
+        command:
+        - "/bin/sh"
+        - "-c"
+        args:
+        - export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.history.fs.logDirectory=s3a://$BUCKET_NAME -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem -Dspark.hadoop.fs.s3a.endpoint=http://$BUCKET_HOST:$BUCKET_PORT -Dspark.hadoop.fs.s3a.access.key=$AWS_ACCESS_KEY_ID -Dspark.hadoop.fs.s3a.secret.key=$AWS_SECRET_ACCESS_KEY";
+        - /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer;
+        envFrom:
+        - configMapRef:
+            name: obc-spark-history-server
+        - secretRef:
+            name: obc-spark-history-server
+        livenessProbe:
+          httpGet:
+            path: /
+            port: historyport
+        readinessProbe:
+          httpGet:
+            path: /
+            port: historyport
