@@ -24,7 +24,7 @@ RUN mv spark-${spark_version}-bin-hadoop-provided-glue spark
 
 
 # Hadoop
-ADD http://mirrors.whoishostingthis.com/apache/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
+ADD https://downloads.apache.org/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
 RUN tar -xvzf hadoop-${hadoop_version}.tar.gz
 RUN mv hadoop-${hadoop_version} hadoop
 
@@ -89,11 +89,8 @@ ENV LD_LIBRARY_PATH /lib64
 
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
-# RUN chmod a+x /opt/decom.sh 
+# RUN chmod a+x /opt/decom.sh
 
-RUN mkdir -p /etc/metrics/conf
-COPY conf/metrics.properties /etc/metrics/conf
-COPY conf/prometheus.yaml /etc/metrics/conf
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 
