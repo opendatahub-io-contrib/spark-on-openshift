@@ -1,5 +1,3 @@
-*.env
-*.devel
 .idea
 .metadata
 .cache-main
@@ -13,3 +11,4 @@ target/
 .DS_Store
 *.iml
 scalastyle-output.xml
+
