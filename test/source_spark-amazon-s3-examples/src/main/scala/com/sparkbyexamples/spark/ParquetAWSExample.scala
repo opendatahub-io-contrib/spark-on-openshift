@@ -49,17 +49,6 @@ object ParquetAWSExample extends App{
       .partitionBy("gender","salary")
       .parquet("s3a://" + bucket + "/parquet/people2.parquet")
 
-//    val parqDF2 = spark.read.parquet("s3a://" + bucket + "/parquet/people2.parquet")
-//    parqDF2.createOrReplaceTempView("ParquetTable2")
-//
-//    val df3 = spark.sql("select * from ParquetTable2  where gender='M' and salary >= 4000")
-//    df3.explain()
-//    df3.printSchema()
-//    df3.show()
-//
-//    val parqDF3 = spark.read
-//      .parquet("s3a://" + bucket + "/parquet/people.parquet/gender=M")
-//    parqDF3.show()
-
+    spark.stop()
 
 }
