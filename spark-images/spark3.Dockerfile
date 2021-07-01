@@ -91,6 +91,9 @@ WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
 # RUN chmod a+x /opt/decom.sh
 
+RUN mkdir -p /etc/metrics/conf
+COPY conf/metrics.properties /etc/metrics/conf
+COPY conf/prometheus.yaml /etc/metrics/conf
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 
