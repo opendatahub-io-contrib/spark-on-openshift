@@ -150,6 +150,9 @@ aws --endpoint-url YOUR_ROUTE_TO_S3 s3 cp YOUR_FILE s3://YOUR_BUCKET_NAME/logs-d
 
 Renaming this file `.s3keep` will mark it as hidden from from the History Server and Spark logging mechanism perspective, but the "folder" will appear as being present, making everyone happy!
 
+In the spark-history-server folder you will find an empty `.s3keep` file that you can already use.
+
+
 === History Server deployment
 
 We can now create the service account, Role, RoleBonding, Service, Route and Deployment for the History Server.
