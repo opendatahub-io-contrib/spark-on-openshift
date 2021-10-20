@@ -50,18 +50,6 @@ oc new-project spark-operator
 
 NOTE: From now on all the `oc` commands are supposed to be run in the context of this project.
 
-=== Service Account and Role
-
-The operator needs a special Service Account and Role to create pods and services.
-
-From the `spark-operator` folder:
-
-.Create SA with Role
-[source,bash]
-----
-oc apply -f spark-rbac.yaml
-----
-
 === Operator
 
 We will use the standard version of the Google Spark Operator.
