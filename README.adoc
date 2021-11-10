@@ -122,6 +122,18 @@ oc apply -f spark-operator-dashboard.yaml
 oc apply -f spark-application-dashboard.yaml
 ----
 
+=== Service Account and Role for another namespace
+
+The operator creates a special Service Account and Role to create pods and services in the namespace where it is deployed. If you want to create SparkApplication or ScheduledSparkApplication objects in another namespace, you first have to create an account, role and rolebinding into it. This is this ServiceAccount that you need to use for your all the Spark applications in this namespace.
+
+From the `spark-operator` folder, while in the target namespace (`oc project YOUR_NAMESPACE`):
+
+.Create SA with Role
+[source,bash]
+----
+oc apply -f spark-rbac.yaml
+----
+
 == Spark History Server
 
 All the following commands are executed from the `spark-history-server` folder.
