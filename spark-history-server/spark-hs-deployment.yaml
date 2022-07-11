@@ -1,5 +1,4 @@
 ### Adapted from Helm Chart: https://artifacthub.io/packages/helm/spot/spark-history-server
-# Source: spark-history-server/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -8,7 +7,6 @@ metadata:
     app.kubernetes.io/name: spark-history-server
     app.kubernetes.io/instance: spark-history-server
 ---
-# Source: spark-history-server/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -16,13 +14,11 @@ metadata:
   labels:
     app.kubernetes.io/name: spark-history-server
     app.kubernetes.io/instance: spark-history-server
-    app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups: [""]
   resources: ["deployments", "pods"]
   verbs: ["*"]
 ---
-# Source: spark-history-server/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -36,14 +32,12 @@ roleRef:
   name: spark-history-server-cr
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: spark-history-server/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: spark-history-server
   labels:
     app.kubernetes.io/name: spark-history-server
-    helm.sh/chart: spark-history-server-1.5.0
     app.kubernetes.io/instance: spark-history-server
 spec:
   type: ClusterIP
@@ -82,7 +76,6 @@ metadata:
   name: spark-history-server
   labels:
     app.kubernetes.io/name: spark-history-server
-    helm.sh/chart: spark-history-server-1.5.0
     app.kubernetes.io/instance: spark-history-server
 spec:
   replicas: 1
@@ -99,7 +92,7 @@ spec:
       serviceAccountName: spark-history-server
       containers:
       - name: spark-history-server
-        image: "quay.io/guimou/spark-odh:s3.0.1-h3.3.0_v0.0.2"
+        image: "quay.io/opendatahub-contrib/spark:s3.3.0-h3.3.3_latest"
         imagePullPolicy: IfNotPresent
         serviceAccount: 'spark-operator-spark'
         env:

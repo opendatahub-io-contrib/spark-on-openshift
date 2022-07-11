@@ -17,7 +17,7 @@ spec:
     "spark.hadoop.fs.s3a.bucket.YOUR_BUCKET.path.style.access": "true"
     "spark.hadoop.fs.s3a.bucket.YOUR_BUCKET.connection.ssl.enabled": "false"
   mainApplicationFile: 'local:///home/wordcount.py'
-  image: "quay.io/guimou/pyspark-odh:s3.3.0-h3.3.3_latest"
+  image: "quay.io/opendatahub-contrib/pyspark:s3.3.0-h3.3.3_latest"
   imagePullPolicy: Always
   volumes:
     - name: wordcount

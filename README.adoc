@@ -16,7 +16,7 @@ Instructions and tools for deploying and using the https://github.com/GoogleClou
 
 We include in this project custom Spark images with the Hadoop S3a connector to connect to S3-based object storage. Those images are based on https://catalog.redhat.com/software/containers/ubi8/openjdk-8/5dd6a48dbed8bd164a09589a[ubi8/openjdk-8], and are updated accordingly.
 
-Pre-built images can be found here, https://quay.io/repository/guimou/spark-odh and https://quay.io/repository/guimou/pyspark-odh, but you can also choose to build your own.
+Pre-built images can be found here, https://quay.io/repository/opendatahub-contrib/spark and https://quay.io/repository/opendatahub-contrib/pyspark, but you can also choose to build your own.
 
 Available images:
 
