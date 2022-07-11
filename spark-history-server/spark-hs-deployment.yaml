@@ -1,4 +1,4 @@
-### Adpated from Helm Chart: https://artifacthub.io/packages/helm/spot/spark-history-server
+### Adapted from Helm Chart: https://artifacthub.io/packages/helm/spot/spark-history-server
 # Source: spark-history-server/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
