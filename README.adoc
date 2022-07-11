@@ -1,44 +1,73 @@
 = Spark on OpenShift
+:toc:
 
-This repo provides tools and instructions for deploying and using Google Spark Operator on OpenShift, with custom images including S3 connectors, JMX exporter for monitoring,...
+== General and Open Data Hub Information
 
-== Custom Spark images
+*Repository Description*:
 
-We will first create the custom Spark images (link:https://github.com/bbenzikry/spark-eks[Credits]).
+Instructions and tools for deploying and using the https://github.com/GoogleCloudPlatform/spark-on-k8s-operator[*Spark on Kubernetes Operator*] and the *Spark History Server* on OpenShift alongside Open Data Hub. The provided custom *Spark* images include S3 connectors and committers, and JMX exporter for monitoring.
 
-From the spark-images folder:
+*Compatibility*:
 
-NOTE: You can modify the Dockerfiles in the repo to change the Spark, Hadoop or other libraries versions.
+- Tested with OpenShift 4.7, 4.8, 4.9, 4.10
+- No link with Open Data Hub, so will work with any version.
 
-.Build the base Spark 3 image
+== Custom Spark Images
+
+We include in this project custom Spark images with the Hadoop S3a connector to connect to S3-based object storage. Those images are based on https://catalog.redhat.com/software/containers/ubi8/openjdk-8/5dd6a48dbed8bd164a09589a[ubi8/openjdk-8], and are updated accordingly.
+
+Pre-built images can be found here, https://quay.io/repository/guimou/spark-odh and https://quay.io/repository/guimou/pyspark-odh, but you can also choose to build your own.
+
+Available images:
+
+* Spark images:
+    ** Spark 2.4.4 + Hadoop 2.8.5
+    ** Spark 2.4.6 + Hadoop 3.3.0
+    ** Spark 3.0.1 + Hadoop 3.3.0
+    ** Spark 3.3.0 + Hadoop 3.3.3
+* PySpark images:
+    ** Spark 2.4.4 + Hadoop 2.8.5 + Python 3.6
+    ** Spark 2.4.6 + Hadoop 3.3.0 + Python 3.6
+    ** Spark 3.0.1 + Hadoop 3.3.0 + Python 3.8
+    ** Spark 3.3.0 + Hadoop 3.3.3 + Python 3.9
+
+=== Manually building custom Spark images
+
+In the `spark-images` folder you will find the sources for the pre-built images. You can built them again, or use them as templates for your own images, should you want to change additional libraries versions or add others. Pay attention to the slight differences in the Dockerfiles depending on the version of Spark, Hadoop or Python you want to install.
+
+Example, from the `spark-images` folder:
+
+.Build the latest base Spark 3.3.0 + Hadoop 3.3.3 image
 [source,bash]
 ----
-docker build --file spark3.Dockerfile --tag spark-odh:s3.0.1-h3.3.0_v0.0.1 .
+podman build --file spark-3.3.0_hadoop-3.3.3.Dockerfile --tag spark-odh:s3.3.0-h3.3.3_v0.0.1 .
 ----
 
-.(Optional) Push the image to your repo
+.(Optional) Tag and Push the image to your repo
 [source,bash]
 ----
-docker tag spark-odh:s3.0.1-h3.3.0_v0.0.1 your_repo/spark-odh:s3.0.1-h3.3.0_v0.0.1
-docker push your_repo/spark-odh:s3.0.1-h3.3.0_v0.0.1
+podman tag spark-odh:s3.3.0-h3.3.3_v0.0.1 your_repo/spark-odh:s3.3.0-h3.3.3_v0.0.1
+podman push your_repo/spark-odh:s3.3.0-h3.3.3_v0.0.1
 ----
+
+You can also extend a Spark image with Python to create a PySpark-compatible image:
 
 .Build the PySpark image
 [source,bash]
 ----
-docker build --file pyspark.Dockerfile --tag pyspark-odh:s3.0.1-h3.3.0_v0.0.1 --build-arg base_img=spark-odh:s3.0.1-h3.3.0_v0.0.1 .
+podman build --file pyspark.Dockerfile --tag pyspark-odh:s3.3.0-h3.3.3_v0.0.1 --build-arg base_img=spark-odh:s3.3.0-h3.3.3_v0.0.1 .
 ----
 
-.(Optional) Push the image to your repo
+.(Optional) Tag and Push the image to your repo
 [source,bash]
 ----
-docker tag pyspark-odh:s3.0.1-h3.3.0_v0.0.1 quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.1
-docker push quay.io/guimou/pyspark-odh:s3.0.1-h3.3.0_v0.0.1
+podman tag pyspark-odh:s3.3.0-h3.3.3_v0.0.1 your_repo/pyspark-odh:s3.3.0-h3.3.3_v0.0.1
+podman push your_repo/pyspark-odh:s3.3.0-h3.3.3_v0.0.1
 ----
 
-== Spark operator installation
+== Spark Operator Installation
 
-=== Namespace for the operator
+=== Namespace
 
 The operator will be installed in its own namespace but will be able to monitor all namespaces for jobs to be launched.
 
@@ -52,7 +81,7 @@ NOTE: From now on all the `oc` commands are supposed to be run in the context of
 
 === Operator
 
-We will use the standard version of the Google Spark Operator.
+We can use the standard version of the Spark on Kubernetes Operator at its latest version.
 
 .Add the helm repo
 [source,bash]
@@ -66,13 +95,13 @@ helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-
 helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace  --set image.tag=v1beta2-1.3.3-3.1.1 --set webhook.enable=true --set resourceQuotaEnforcement.enable=true 
 ----
 
-=== Monitoring
+=== Spark Monitoring (Optional)
 
-We will monitor the Spark operator itself, as well as the applications it creates.
+We can monitor the Spark operator itself, as well as the applications it creates with Prometheus and Grafana. Note that this is only monitoring and reporting on the workload metrics. To get information about the Spark Jobs themselves you need to deploy the Spark History Server (see below).
 
-NOTE: Prerequisites: Prometheus and Grafana must be installed in your environment. The easiest way is to use the operators. An instance of Grafana must be created so that the ServiceAccount is provisioned.
+NOTE: *Prerequisites*: Prometheus and Grafana must be installed in your environment. The easiest way is to use their respective operators. Deploy the operators in the `spark-operator` namespace, and create simple instance of Prometheus and Grafana.
 
-From spark-operator folder:
+From the `spark-operator` folder:
 
 .Create the two Services that will expose the metrics
 [source,bash]
@@ -93,7 +122,7 @@ oc apply -f spark-service-monitor.yaml
 oc apply -f prometheus-datasource.yaml
 ----
 
-NOTE: We will need another datasource to retrieve base CPU and RAM metrics. To do that we'll connect to the "main" OpenShift Prometheus through the following procedure.
+NOTE: We also need another datasource to retrieve base CPU and RAM metrics from Prometheus. To do that we will connect to the "main" OpenShift Prometheus with the following procedure.
 
 .Grant the Grafana Service Account the cluster-monitoring-view cluster role:
 [source,bash]
@@ -107,7 +136,7 @@ oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-servic
 export BEARER_TOKEN=$(oc serviceaccounts get-token grafana-serviceaccount)
 ----
 
-Deploy `main-prometheus-datasource.yaml` file with the BEARER_TOKEN value.
+Deploy `main-prometheus-datasource.yaml` file with the `BEARER_TOKEN` value.
 
 .Create the "main" Prometheus Datasource
 [source,bash]
@@ -122,9 +151,13 @@ oc apply -f spark-operator-dashboard.yaml
 oc apply -f spark-application-dashboard.yaml
 ----
 
-=== Service Account and Role for another namespace
+=== Use Spark operator from another namespace (Optional)
 
-The operator creates a special Service Account and Role to create pods and services in the namespace where it is deployed. If you want to create SparkApplication or ScheduledSparkApplication objects in another namespace, you first have to create an account, role and rolebinding into it. This is this ServiceAccount that you need to use for your all the Spark applications in this namespace.
+The operator creates a special Service Account and a Role to create pods and services in the namespace where it is deployed.
+
+If you want to create SparkApplication or ScheduledSparkApplication objects in another namespace, you first have to create an account, a role and a rolebinding into it.
+
+This *ServiceAccount* is the one you need to use for your all the Spark applications in this specific namespace.
 
 From the `spark-operator` folder, while in the target namespace (`oc project YOUR_NAMESPACE`):
 
@@ -136,11 +169,21 @@ oc apply -f spark-rbac.yaml
 
 == Spark History Server
 
-All the following commands are executed from the `spark-history-server` folder.
+The operator only creates ephemeral workloads. So unless you look at the logs in real time, you will loose all related information after the workload is finished.
 
-=== Object storage
+To avoid losing this precious information, you can (and you should!) send all the logs to a specific location, and set up the Spark History Server to be able to view and interpret them at any time. 
 
-We will use object storage to store the logs data from the Spark jobs. We will first need to create a bucket.
+The logs location has to be shared storage that all pods can access simultaneously, so Object Storage (S3), Hadoop (HDFS), NFS,...
+
+For this setup we will be using Object Storage from OpenShift Data Foundation.
+
+NOTE: All the following commands are executed from the `spark-history-server` folder.
+
+=== Object storage bucket
+
+First, create a dedicated bucket to store the logs from the Spark jobs.
+
+Again, here we are using an Object Bucket Claim from OpenShift Data Foundation, which will create a bucket using the Multi-Cloud Gateway. Please adapt this depending on your chosen storage solution.
 
 .Create the OBC
 [source,bash]
@@ -148,21 +191,23 @@ We will use object storage to store the logs data from the Spark jobs. We will f
 oc apply -f spark-hs-obc.yaml
 ----
 
-IMPORTANT: The Spark/Hadoop instances cannot log direclty into a bucket. A "folder" must exist where the logs will be sent. We will trick Spark/Hadoop into creating this folder by uploading a hidden file to the location we want this folder.
+IMPORTANT: The Spark/Hadoop instances cannot log directly into an empty bucket. A "folder" must exist where the logs will be sent. We will help Spark/Hadoop into creating this folder by uploading an empty hidden file to the location we want this folder.
 
-Retrieve the Access and Secret Key from the Secret named `obc-spark-history-server`, the name of the bucket from the ConfigMap named `obc-spark-history-server` as well as the Route to the S3 storage (you may have to create it to access the RGW, default S3 Route in ODF points to MCG).
+Retrieve the Access and Secret Key from the Secret named `obc-spark-history-server`, the name of the bucket from the ConfigMap named `obc-spark-history-server`, as well as the Route to the S3 storage.
 
-.Upload any small file, to the bucket (here using the AWS CLI)
+.Upload a small file to the bucket (here using the https://aws.amazon.com/cli/[AWS CLI])
 [source,bash]
 ----
 export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
 export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
-aws --endpoint-url YOUR_ROUTE_TO_S3 s3 cp YOUR_FILE s3://YOUR_BUCKET_NAME/logs-dir/.s3keep
+export S3_ROUTE=YOUR_ROUTE_TO_S3
+export BUCKET_NAME=YOUR_BUCKET_NAME
+aws --endpoint-url $S3_ROUTE s3 cp .s3keep s3://$BUCKET_NAME/logs-dir/.s3keep
 ----
 
-Renaming this file `.s3keep` will mark it as hidden from from the History Server and Spark logging mechanism perspective, but the "folder" will appear as being present, making everyone happy!
+Naming this file `.s3keep` will mark it as hidden from from the History Server and Spark logging mechanism perspective, but the "folder" will appear as being present, making everyone happy!
 
-In the spark-history-server folder you will find an empty `.s3keep` file that you can already use.
+You will find an empty `.s3keep` file that you can already use in the `spark-history-server` folder.
 
 
 === History Server deployment
@@ -175,18 +220,17 @@ We can now create the service account, Role, RoleBonding, Service, Route and Dep
 oc apply -f spark-hs-deployment.yaml
 ----
 
-The UI is not accessible through the Route that was created, named `spark-history-server`
+The UI of the Spark History Server is now accessible through the Route that was created, named `spark-history-server`
 
+== Spark Operator Usage
 
-== Usage
+A quick test/demo can be done with the standard word count example from Shakespeare's sonnets.
 
-We can do a quick test/demo with the standard word count example from Shakespeare's sonnets.
+=== Input data
 
-=== Object storage
+Create a bucket using an Object Bucket Claim and populate it with the data.
 
-We'll create a bucket using and ObjectBucketClaim, and populate it with the data.
-
-NOTE: This OBC creates a bucket in the RGW from an OpenShift Data Foundation deployment. Adapt the instructions depending on your S3 provider.
+NOTE: This OBC creates a bucket with the MCG from an OpenShift Data Foundation deployment. Adapt the instructions depending on your S3 provider.
 
 From the `test` folder:
 
@@ -196,19 +240,21 @@ From the `test` folder:
 oc apply -f obc.yaml
 ----
 
-Retrieve the Access and Secret Key from the Secret named `spark-demo`, the name of the bucket from the ConfigMap named `spark-demo` as well as the Route to the S3 storage (you may have to create it to access the RGW, default S3 Route in ODF points to MCG).
+Retrieve the Access and Secret Key from the Secret named `spark-demo`, the name of the bucket from the ConfigMap named `spark-demo` as well as the Route to the S3 storage.
 
-.Upload the data, the file `shakespeare.txt`, to the bucket (here using the AWS CLI)
+.Upload the data (the file `shakespeare.txt`), to the bucket
 [source,bash]
 ----
 export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
 export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
-aws --endpoint-url YOUR_ROUTE_TO_S3 s3 cp shakespeare.txt s3://YOUR_BUCKET_NAME/shakespeare.txt
+export S3_ROUTE=YOUR_ROUTE_TO_S3
+export BUCKET_NAME=YOUR_BUCKET_NAME
+aws --endpoint-url $S3_ROUTE s3 cp shakespeare.txt s3://$BUCKET_NAME/shakespeare.txt
 ----
 
 TIP: If your endpoint is using a self-signed certificate, you can add `--no-verify-ssl` to the command.
 
-Our application file is `wordcount.py` that you can find in the folder. To make it accessible to the Spark Application, it is packaged as data inside a Config Map. This CM will be mounted as a Volume inside our Spark Application YAML definition.
+Our application file is `wordcount.py` that you can find in the folder. To make it accessible to the Spark Application, we will package it as data inside a Config Map. This CM will be mounted as a Volume inside our Spark Application YAML definition.
 
 .Create the application Config Map
 [source,bash]
@@ -220,33 +266,33 @@ oc apply -f wordcount_configmap.yaml
 
 We are now ready to launch our Spark Job using the SparkApplication CRD from the operator. Our YAML definition will:
 
-* Use the application file (wordcount.py) from the ConfigMap mounted as a volume
-* Inject the Endpoint, Bucket, Access and Secret Keys inside the containers definition so that the driver and the workers can retrieve the data to process it
+* Use the application file (wordcount.py) from the ConfigMap mounted as a volume in the Spark Operator, the driver and the executors.
+* Inject the Endpoint, Bucket, Access and Secret Keys inside the containers definition so that the driver and the workers can retrieve the data to process it.
 
-.Launch the Spark Job
+.Launch the Spark Job (replace the version for corresponding yaml file)
 [source,bash]
 ----
-oc apply -f spark_app_shakespeare.yaml
+oc apply -f spark_app_shakespeare_version-to-test.yaml
 ----
 
 If you look at the OpenShift UI you will see the driver, then the workers spawning. They will execute the program, then terminate.
 
-image::test/app_deployment.png[App deployment]
+image::doc/img/app_deployment.png[App deployment]
 
 You can now retrieve the results:
 
 .List folder content
 [source,bash]
 ----
-aws --endpoint-url YOUR_ROUTE_TO_S3 s3 ls s3://YOUR_BUCKET_NAME/
+aws --endpoint-url $S3_ROUTE s3 ls s3://$BUCKET_NAME/
 ----
 
 You will see that the results have been saved in a location called `sorted_count_timestamp`.
 
-.Retrieve the results
+.Retrieve the results (replace `timestamp` with the right value)
 [source,bash]
 ----
-aws --endpoint-url YOUR_ROUTE_TO_S3 s3 cp s3://YOUR_BUCKET_NAME/sorted_counts_timestamp ./ --recursive
+aws --endpoint-url $S3_ROUTE s3 cp s3://$BUCKET_NAME/sorted_counts_timestamp ./ --recursive
 ----
 
 There should be different files:
@@ -279,18 +325,32 @@ There should be different files:
 ....
 ----
 
-So the sorted list of all the words with their occurences in the full text.
+So the sorted list of all the words with their occurrences in the full text.
 
-While a job is running you can also have a look at the Grafana dashboards for something like this:
+While a job is running you can also have a look at the Grafana dashboards we created for monitoring. It will look like this:
 
-image::test/spark_operator_dashboard.png[Dashboard]
+image::doc/img/spark_operator_dashboard.png[Dashboard]
 
 === History Server Test
 
-We'll now log the output from the job using our history server.
+We will now run the same job, but log the output using our history server. Have a look at the YAML file to see how this is configured.
 
-.Launch the Spark Job
+To send the logs to the history server bucket, you have to modify the `sparkconf`section starting at line 9. Replace the values for YOUR_BUCKET, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY with the corresponding value for the history server bucket.
+
+.Launch the Spark Job (replace the version for corresponding yaml file)
 [source,bash]
 ----
-oc apply -f spark_app_shakespeare_history_server.yaml
+oc apply -f spark_app_shakespeare_version-to-test_history_server.yaml
 ----
+
+If you go to the history server URL, you now have access to all the logs and nice dashboards like this one for the different workloads you have run.
+
+image::doc/img/history_server.png[History Server]
+
+== References
+
+There are endless configuration, settings and tweaks you can use with Spark. On top of the standard documentation, here are some documents you will find interesting to make the most use of Spark on OpenShift.
+
+- https://towardsdatascience.com/apache-spark-with-kubernetes-and-fast-s3-access-27e64eb14e0f[Spark on Kubernets with details on the S3 committers].
+- https://01.org/blogs/hualongf/2021/introduction-s3a-ceph-big-data-workloads[Spark optimization for S3 storage].
+- https://cloud.redhat.com/blog/getting-started-running-spark-workloads-on-openshift[Detailed walkthrough and code for running TPC-DS benchmark with Spark on OpenShift]. Lots of useful configuration information to interact with the storage.

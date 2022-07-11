@@ -4,13 +4,13 @@ metadata:
   name: shk-app
 spec:
   type: Python
-  sparkVersion: 2.4.6
+  sparkVersion: 3.3.0
   pythonVersion: '3'
   sparkConf:
     "spark.metrics.conf.*.source.jvm.class": "org.apache.spark.metrics.source.JvmSource"
     "spark.metrics.appStatusSource.enabled": "true"
   mainApplicationFile: 'local:///home/wordcount.py'
-  image: "quay.io/guimou/pyspark-odh:s2.4.6-h3.3.0_latest"
+  image: "quay.io/guimou/pyspark-odh:s3.3.0-h3.3.3_latest"
   imagePullPolicy: Always
   volumes:
     - name: wordcount
@@ -63,6 +63,6 @@ spec:
     exposeDriverMetrics: true
     exposeExecutorMetrics: true
     prometheus:
-      jmxExporterJar: "/prometheus/jmx_prometheus_javaagent-0.15.0.jar"
+      jmxExporterJar: "/prometheus/jmx_prometheus_javaagent-0.17.0.jar"
       portName: 'tcp-prometheus'
   

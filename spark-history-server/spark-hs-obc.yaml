@@ -4,4 +4,4 @@ metadata:
   name: obc-spark-history-server
 spec:
   generateBucketName: obc-spark-history-server
-  storageClassName: ocs-storagecluster-ceph-rgw
+  storageClassName: openshift-storage.noobaa.io
