@@ -1,12 +1,12 @@
 FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 AS builder
 
 # Build options
-ARG spark_version=3.0.1
-ARG hadoop_version=3.3.0
-ARG jmx_prometheus_javaagent_version=0.15.0
+ARG spark_version=3.3.1
+ARG hadoop_version=3.3.4
+ARG jmx_prometheus_javaagent_version=0.17.2
 ARG spark_uid=185
 # Spark's Guava version to match with Hadoop's
-ARG guava_version=27.0-jre
+ARG guava_version=31.1-jre
 
 USER 0
 
@@ -19,13 +19,13 @@ RUN microdnf install -y gzip && \
 # Download Spark
 ADD https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-without-hadoop.tgz .
 # Unzip Spark
-RUN tar -xvzf spark-${spark_version}-bin-without-hadoop.tgz
+RUN tar -xvzf spark-${spark_version}-bin-without-hadoop.tgz --no-same-owner
 RUN mv spark-${spark_version}-bin-without-hadoop spark
 
 # Download Hadoop
 ADD https://archive.apache.org/dist/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
 # Unzip Hadoop
-RUN tar -xvzf hadoop-${hadoop_version}.tar.gz
+RUN tar -xvzf hadoop-${hadoop_version}.tar.gz --no-same-owner
 RUN mv hadoop-${hadoop_version} hadoop
 # Delete unnecessary hadoop documentation
 RUN rm -rf hadoop/share/doc
@@ -38,6 +38,9 @@ RUN chmod 0644 prometheus/jmx_prometheus_javaagent*.jar
 WORKDIR /spark/jars
 RUN rm -f guava-*.jar
 ADD https://repo1.maven.org/maven2/com/google/guava/guava/${guava_version}/guava-${guava_version}.jar .
+
+# Add Spark Hadoop Cloud to interact with cloud infrastructures
+ADD https://repo1.maven.org/maven2/org/apache/spark/spark-hadoop-cloud_2.12/${spark_version}/spark-hadoop-cloud_2.12-${spark_version}.jar .
 
 ### Build final image
 FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 as final

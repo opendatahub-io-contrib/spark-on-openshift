@@ -25,11 +25,13 @@ Available images:
     ** Spark 2.4.6 + Hadoop 3.3.0
     ** Spark 3.0.1 + Hadoop 3.3.0
     ** Spark 3.3.0 + Hadoop 3.3.3
+    ** Spark 3.3.1 + Hadoop 3.3.4
 * PySpark images:
     ** Spark 2.4.4 + Hadoop 2.8.5 + Python 3.6
     ** Spark 2.4.6 + Hadoop 3.3.0 + Python 3.6
     ** Spark 3.0.1 + Hadoop 3.3.0 + Python 3.8
     ** Spark 3.3.0 + Hadoop 3.3.3 + Python 3.9
+    ** Spark 3.3.1 + Hadoop 3.3.4 + Python 3.9
 
 === Manually building custom Spark images
 
