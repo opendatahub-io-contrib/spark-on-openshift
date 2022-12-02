@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing there!
 
+## [0.1.1] - 2022-11-30
+
+### Added
+
+- Update of openjdk for all images, republished at version 0.1.1
+- New Image for Spark 3.3.1 + Hadoop 3.3.4
+
 ## [0.1.0] - 2022-07-11
 
 ### Added

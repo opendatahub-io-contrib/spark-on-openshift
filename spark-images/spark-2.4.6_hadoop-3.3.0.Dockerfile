@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.13 AS builder
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 AS builder
 
 # set desired spark, hadoop and kubernetes client versions
 ARG spark_version=2.4.6
@@ -50,7 +50,7 @@ ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${aws_java_
 RUN chmod 0644 aws-java-sdk*.jar
 
 ### Build final image
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.13 as final
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 as final
 
 # Fix for https://issues.redhat.com/browse/OPENJDK-335
 ENV NSS_WRAPPER_PASSWD=
