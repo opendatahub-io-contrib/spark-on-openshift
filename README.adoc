@@ -207,6 +207,18 @@ export BUCKET_NAME=YOUR_BUCKET_NAME
 aws --endpoint-url $S3_ROUTE s3 cp .s3keep s3://$BUCKET_NAME/logs-dir/.s3keep
 ----
 
+Alternative, you can run the following command to extract the data directly from OpenShift.
+
+.Upload a small file to the bucket (here using the https://aws.amazon.com/cli/[AWS CLI]) automatically
+[source,bash]
+----
+export AWS_ACCESS_KEY_ID=$(oc get secret obc-spark-history-server -o go-template --template="{{.data.AWS_ACCESS_KEY_ID|base64decode}}")
+export AWS_SECRET_ACCESS_KEY=$(oc get secret obc-spark-history-server -o go-template --template="{{.data.AWS_SECRET_ACCESS_KEY|base64decode}}")
+export S3_ROUTE="https://$(oc get route s3 -o jsonpath='{.spec.host}' -n openshift-storage)"
+export BUCKET_NAME=$(oc get cm obc-spark-history-server -o jsonpath='{.data.BUCKET_NAME}')
+aws --endpoint-url $S3_ROUTE s3 cp .s3keep s3://$BUCKET_NAME/logs-dir/.s3keep
+----
+
 Naming this file `.s3keep` will mark it as hidden from from the History Server and Spark logging mechanism perspective, but the "folder" will appear as being present, making everyone happy!
 
 You will find an empty `.s3keep` file that you can already use in the `spark-history-server` folder.
@@ -251,6 +263,18 @@ export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
 export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
 export S3_ROUTE=YOUR_ROUTE_TO_S3
 export BUCKET_NAME=YOUR_BUCKET_NAME
+aws --endpoint-url $S3_ROUTE s3 cp shakespeare.txt s3://$BUCKET_NAME/shakespeare.txt
+----
+
+Alternative, you can run the following command to extract the data directly from OpenShift.
+
+.Upload the data (the file `shakespeare.txt`), to the bucket automatically
+[source,bash]
+----
+export AWS_ACCESS_KEY_ID=$(oc get secret spark-demo -o go-template --template="{{.data.AWS_ACCESS_KEY_ID|base64decode}}")
+export AWS_SECRET_ACCESS_KEY=$(oc get secret spark-demo -o go-template --template="{{.data.AWS_SECRET_ACCESS_KEY|base64decode}}")
+export S3_ROUTE="https://$(oc get route s3 -o jsonpath='{.spec.host}' -n openshift-storage)"
+export BUCKET_NAME=$(oc get cm spark-demo -o jsonpath='{.data.BUCKET_NAME}')
 aws --endpoint-url $S3_ROUTE s3 cp shakespeare.txt s3://$BUCKET_NAME/shakespeare.txt
 ----
 
