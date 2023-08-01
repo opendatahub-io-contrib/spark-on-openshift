@@ -1,0 +1,21 @@
+/opt/app-root/bin/spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master k8s://https://$KUBERNETES_SERVICE_HOST:443 \
+--deploy-mode client \
+--conf spark.kubernetes.namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace) \
+--conf spark.app.name=sparkpi \
+--conf spark.kubernetes.container.image=quay.io/opendatahub-contrib/pyspark:s3.3.1-h3.3.4_v0.1.1 \
+--conf spark.driver.blockManager.port=7777 \
+--conf spark.driver.host=$(hostname -i) \
+--conf spark.driver.port=2222 \
+--conf spark.driver.bindAddress=0.0.0.0 \
+--conf spark.eventLog.enabled=false \
+--conf spark.eventLog.dir=/tmp \
+--conf spark.network.timeout=2400 \
+--conf spark.executor.instances=5 \
+--conf spark.executor.cores=1 \
+--conf spark.kubernetes.executor.limit.cores=1 \
+--conf spark.executor.memory=512m \
+--conf spark.kubernetes.file.upload.path=/tmp \
+--jars /opt/app-root/spark-3.3.1/examples/jars/spark-examples_2.12-3.3.1.jar \
+/opt/app-root/spark-3.3.1/examples/jars/spark-examples_2.12-3.3.1.jar 100
