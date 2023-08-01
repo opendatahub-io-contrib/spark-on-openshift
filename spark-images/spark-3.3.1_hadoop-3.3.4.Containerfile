@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 AS builder
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.16 AS builder
 
 # Build options
 ARG spark_version=3.3.1
@@ -43,7 +43,7 @@ ADD https://repo1.maven.org/maven2/com/google/guava/guava/${guava_version}/guava
 ADD https://repo1.maven.org/maven2/org/apache/spark/spark-hadoop-cloud_2.12/${spark_version}/spark-hadoop-cloud_2.12-${spark_version}.jar .
 
 ### Build final image
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 as final
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.16 as final
 
 # Fix for https://issues.redhat.com/browse/OPENJDK-335
 ENV NSS_WRAPPER_PASSWD=
@@ -55,7 +55,7 @@ WORKDIR /opt/spark
 
 # Copy Spark from builder stage
 COPY --from=builder /spark /opt/spark
-COPY --from=builder /spark/kubernetes/dockerfiles/spark/entrypoint.sh /opt
+COPY --from=builder /spark/kubernetes/Containerfiles/spark/entrypoint.sh /opt
 
 # Copy Hadoop from builder stage
 COPY --from=builder /hadoop /opt/hadoop

@@ -1,0 +1,21 @@
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master k8s://$(oc config view --minify -o jsonpath='{..server}') \
+--deploy-mode cluster \
+--conf spark.kubernetes.namespace=$(oc config view --minify -o jsonpath='{..namespace}') \
+--conf spark.app.name=spark-pi \
+--conf spark.kubernetes.driver.pod.name=sparkpi-driver \
+--conf spark.kubernetes.container.image=quay.io/opendatahub-contrib/pyspark:s3.3.1-h3.3.4_v0.1.1 \
+--conf spark.kubernetes.submission.waitAppCompletion=false \
+--conf spark.eventLog.enabled=false \
+--conf spark.network.timeout=2400 \
+--conf spark.driver.cores=1 \
+--conf spark.kubernetes.driver.limit.cores=2048m \
+--conf spark.driver.memory=2000m \
+--conf spark.kubernetes.authenticate.driver.serviceAccountName=pyspark \
+--conf spark.executor.instances=3 \
+--conf spark.executor.cores=1 \
+--conf spark.kubernetes.executor.limit.cores=1 \
+--conf spark.executor.memory=1000m \
+--conf spark.executor.memoryOverhead=2g \
+local:///opt/spark/examples/jars/spark-examples_2.12-3.3.1.jar 100

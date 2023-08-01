@@ -1,8 +1,8 @@
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 AS builder
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.16 AS builder
 
 # set desired spark, hadoop and kubernetes client versions
-ARG spark_version=2.4.6
-ARG hadoop_version=3.3.0
+ARG spark_version=2.4.4
+ARG hadoop_version=2.8.5
 ARG kubernetes_client_version=4.6.4
 ARG jmx_prometheus_javaagent_version=0.15.0
 ARG aws_java_sdk_version=1.12.255
@@ -47,10 +47,9 @@ RUN chmod 0644 jars/kubernetes-*.jar
 WORKDIR /hadoop/share/hadoop/tools/lib
 RUN rm -f ./aws-java-sdk-*.jar
 ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${aws_java_sdk_version}/aws-java-sdk-bundle-${aws_java_sdk_version}.jar .
-RUN chmod 0644 aws-java-sdk*.jar
+RUN chmod 0644 aws-java-sdk-bundle*.jar
 
-### Build final image
-FROM registry.access.redhat.com/ubi8/openjdk-8:1.14 as final
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.16 as final
 
 # Fix for https://issues.redhat.com/browse/OPENJDK-335
 ENV NSS_WRAPPER_PASSWD=
@@ -62,7 +61,7 @@ WORKDIR /opt/spark
 
 # Copy Spark from builder stage
 COPY --from=builder /spark /opt/spark
-COPY --from=builder /spark/kubernetes/dockerfiles/spark/entrypoint.sh /opt
+COPY --from=builder /spark/kubernetes/Containerfiles/spark/entrypoint.sh /opt
 
 # Copy Hadoop from builder stage
 COPY --from=builder /hadoop /opt/hadoop
@@ -90,8 +89,8 @@ RUN set -e ; \
   esac ; \
   curl --retry 8 -S -L -O "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BIN}" ; \
   echo "${TINI_SHA256} ${TINI_BIN}" | sha256sum -c - ; \
-  mv "${TINI_BIN}" /usr/bin/tini ; \
-  chmod +x /usr/bin/tini
+  mv "${TINI_BIN}" /usr/sbin/tini ; \
+  chmod +x /usr/sbin/tini
 
 RUN set -ex && \
     mkdir -p /opt/spark && \
