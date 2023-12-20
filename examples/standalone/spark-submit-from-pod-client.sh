@@ -1,6 +1,7 @@
 /opt/app-root/bin/spark-submit \
 --class org.apache.spark.examples.SparkPi \
---master k8s://https://$KUBERNETES_SERVICE_HOST:443 \
+--master k8s://https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS \
+--conf spark.kubernetes.authenticate.caCertFile=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
 --deploy-mode client \
 --conf spark.kubernetes.namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace) \
 --conf spark.app.name=sparkpi \
