@@ -166,7 +166,8 @@ We can use the standard version of the Spark on Kubernetes Operator at its lates
 .Add the helm repo
 [source,bash]
 ----
-helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+helm repo add spark-operator https://kubeflow.github.io/spark-operator
+helm repo update
 ----
 
 .Deploy the helm chart
