@@ -173,7 +173,10 @@ helm repo update
 .Deploy the helm chart
 [source,bash]
 ----
-helm install spark-operator spark-operator/spark-operator --namespace spark-operator  --create-namespace --set webhook.enable=true --set resourceQuotaEnforcement.enable=true 
+helm install spark-operator spark-operator/spark-operator /
+  --namespace spark-operator  --create-namespace /
+  --set webhook.enable=true /
+  --set resourceQuotaEnforcement.enable=true 
 ----
 
 ==== Spark Monitoring (Optional)
